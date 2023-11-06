@@ -54,7 +54,7 @@ void DPRCN() {
     //Set input and output
     for(int =0;i<6;i++){
         m_pEngine->input_details[i] = TfLiteInterpreterGetInputTensor(m_pEngine->interpreter, i);
-        m_pEngine->output_details[i] = TfLiteInterpreterGetOutputTensor(m_pEngine->interpreter, 0);
+        m_pEngine->output_details[i] = TfLiteInterpreterGetOutputTensor(m_pEngine->interpreter, i);
 
     }
     //Cal dft directly as Block_len is not the power of 2
