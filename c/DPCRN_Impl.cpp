@@ -111,7 +111,7 @@ void DPCRNInfer(trg_engine* m_pEngine, float* cos_f, float* sin_f) {
 
     memmove(m_pEngine->imag_buffer, m_pEngine->imag_buffer + FFT_OUT_SIZE, 10*FFT_OUT_SIZE * sizeof(float));
     memcpy(m_pEngine->imag_buffer+10*FFT_OUT_SIZE,in_imag,FFT_OUT_SIZE*sizeof(float));
-    //the data input of first model is the magnitude of input wav data
+    
     TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[0], m_pEngine->real_buffer, 11*FFT_OUT_SIZE * sizeof(float));
     TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[1], m_pEngine->imag_buffer, 11*FFT_OUT_SIZE * sizeof(float));
     TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[2], m_pEngine->states_h1, STATE_SIZE * sizeof(float));
