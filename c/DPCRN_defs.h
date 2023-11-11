@@ -22,6 +22,7 @@
 #define BLOCK_LEN		(400)
 #define FFT_OUT_SIZE    (BLOCK_LEN / 2 + 1)
 #define STATE_SIZE      (50*128)
+#define RNN_CACHE_SIZE (5*50*128)
 
 #define MODEL_NAME "dpcrn_rt.tflite"
 #define PI 3.141592653589793238
@@ -36,13 +37,14 @@ struct trg_engine {
 
     float real_buffer[FFT_OUT_SIZE*11] = {0};
     float imag_buffer[FFT_OUT_SIZE*11] = {0};
+    float rnn_cache[RNN_CACHE_SIZE] = {0};
     float states_h1[STATE_SIZE] = { 0 };
     float states_c1[STATE_SIZE] = { 0 };
     float states_h2[STATE_SIZE] = { 0 };
     float states_c2[STATE_SIZE] = { 0 };
 
-    TfLiteTensor* input_details[6];
-    const TfLiteTensor* output_details_a[6]
+    TfLiteTensor* input_details[7];
+    const TfLiteTensor* output_details_a[7]
     TfLiteInterpreter* interpreter;
     TfLiteModel* model;
 };
