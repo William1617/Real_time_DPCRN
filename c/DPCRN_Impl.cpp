@@ -52,7 +52,7 @@ void DPRCN() {
         return;
     }
     //Set input and output
-    for(int =0;i<6;i++){
+    for(int =0;i<7;i++){
         m_pEngine->input_details[i] = TfLiteInterpreterGetInputTensor(m_pEngine->interpreter, i);
         m_pEngine->output_details[i] = TfLiteInterpreterGetOutputTensor(m_pEngine->interpreter, i);
 
@@ -114,10 +114,11 @@ void DPCRNInfer(trg_engine* m_pEngine, float* cos_f, float* sin_f) {
     
     TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[0], m_pEngine->real_buffer, 11*FFT_OUT_SIZE * sizeof(float));
     TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[1], m_pEngine->imag_buffer, 11*FFT_OUT_SIZE * sizeof(float));
-    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[2], m_pEngine->states_h1, STATE_SIZE * sizeof(float));
-    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[3], m_pEngine->states_c1, STATE_SIZE * sizeof(float));
-    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[4], m_pEngine->states_h2, STATE_SIZE * sizeof(float));
-    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[5], m_pEngine->states_c2, STATE_SIZE * sizeof(float));
+    fLiteTensorCopyFromBuffer(m_pEngine->input_details_a[2], m_pEngine->rnn_cache, RNN_CACHE_SIZE * sizeof(float));
+    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[3], m_pEngine->states_h1, STATE_SIZE * sizeof(float));
+    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[4], m_pEngine->states_c1, STATE_SIZE * sizeof(float));
+    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[5], m_pEngine->states_h2, STATE_SIZE * sizeof(float));
+    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[6], m_pEngine->states_c2, STATE_SIZE * sizeof(float));
 
     if (TfLiteInterpreterInvoke(m_pEngine->interpreter_a) != kTfLiteOk) {
         printf("Error invoking detection model\n");
@@ -128,10 +129,11 @@ void DPCRNInfer(trg_engine* m_pEngine, float* cos_f, float* sin_f) {
     TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[0], out_real, FFT_OUT_SIZE * sizeof(float));
     TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[1], out_img, FFT_OUT_SIZE * sizeof(float));
     //the putput state of current block will become the input state of next block
-    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[2], m_pEngine->states_h1, STATE_SIZE * sizeof(float));
-    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[3], m_pEngine->states_c1, STATE_SIZE * sizeof(float));
-    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[4], m_pEngine->states_h2, STATE_SIZE * sizeof(float));
-    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[5], m_pEngine->states_c2, STATE_SIZE * sizeof(float));
+    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[2], m_pEngine->rnn_cache, RNN_CACHE_SIZE * sizeof(float));
+    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[3], m_pEngine->states_h1, STATE_SIZE * sizeof(float));
+    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[4], m_pEngine->states_c1, STATE_SIZE * sizeof(float));
+    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[5], m_pEngine->states_h2, STATE_SIZE * sizeof(float));
+    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[6], m_pEngine->states_c2, STATE_SIZE * sizeof(float));
 
     //ifft
     float out_block[BLOCK_LEN];
