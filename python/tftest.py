@@ -19,6 +19,7 @@ in_c1=np.zeros((1,50,128)).astype('float32')
 
 in_h2=np.zeros((1,50,128)).astype('float32')
 in_c2=np.zeros((1,50,128)).astype('float32')
+rnn_cache=np.zeros((1,5,50,128)).astype('float32')
 
 in_real=np.zeros(11*fft_num)
 in_imag=np.zeros(11*fft_num)
@@ -40,19 +41,21 @@ for idx in range(frame_num):
 
     interpreter.set_tensor(input_details[0]['index'] ,np.reshape(in_real,(1,11,201,1)).astype('float32'))
     interpreter.set_tensor(input_details[1]['index'] ,np.reshape(in_imag,(1,11,201,1)).astype('float32'))
-    
-    interpreter.set_tensor(input_details[2]['index'] ,in_h1)
-    interpreter.set_tensor(input_details[3]['index'] ,in_c1)
-    interpreter.set_tensor(input_details[4]['index'] ,in_h2)
-    interpreter.set_tensor(input_details[5]['index'] ,in_c2)
+
+    interpreter.set_tensor(input_details[2]['index'] ,rnn_cache)
+    interpreter.set_tensor(input_details[3]['index'] ,in_h1)
+    interpreter.set_tensor(input_details[4]['index'] ,in_c1)
+    interpreter.set_tensor(input_details[5]['index'] ,in_h2)
+    interpreter.set_tensor(input_details[6]['index'] ,in_c2)
 
     interpreter.invoke()
     out_real=interpreter.get_tensor(output_details[0]['index'])
     out_imag=interpreter.get_tensor(output_details[1]['index'])
-    in_h1=interpreter.get_tensor(output_details[2]['index'])
-    in_c1=interpreter.get_tensor(output_details[3]['index'])
-    in_h2=interpreter.get_tensor(output_details[4]['index'])
-    in_c2=interpreter.get_tensor(output_details[5]['index'])
+    rnn_cache=interpreter.get_tensor(output_details[2]['index'])
+    in_h1=interpreter.get_tensor(output_details[3]['index'])
+    in_c1=interpreter.get_tensor(output_details[4]['index'])
+    in_h2=interpreter.get_tensor(output_details[5]['index'])
+    in_c2=interpreter.get_tensor(output_details[6]['index'])
 
     enhance_frame=np.fft.irfft(np.squeeze(out_real)+1j*np.squeeze(out_imag))
 

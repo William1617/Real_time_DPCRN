@@ -3,11 +3,13 @@ import tensorflow.keras as keras
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Lambda, Input, Conv2D, BatchNormalization, Conv2DTranspose, Concatenate, LayerNormalization, PReLU,ZeroPadding2D,Activation
 
+import tf2onnx
+
 #from modules import DprnnBlock
 from stream_module import DprnnBlock
 
 class DPCRN_model():
-    def __init__(self, batch_size = 1,):
+    def __init__(self):
         self.model=None
         self.numDP = 2
         self.numUnits=128
@@ -29,9 +31,10 @@ class DPCRN_model():
         return [enh_real,enh_imag]
 
 
-    def export_real_time_model(self,save_name,quant=False,name = 'model0'):
+    def export_real_time_model(self,save_name,quant=False,is_tflite=True,name = 'model0'):
         real_dat = Input(batch_shape=(1,11,201,1))
         img_dat = Input(batch_shape=(1,11,201,1))
+        rnn_cache=Input(batch_shape=(1,5,50,128))
         
         in_h1 = Input(batch_shape=(1,50,128))
         in_c1 = Input(batch_shape=(1,50,128))
@@ -72,7 +75,7 @@ class DPCRN_model():
         bn_5 = BatchNormalization(name = name+'_bn_5')(conv_5)
         out_5 = PReLU(shared_axes=[1,2])(bn_5)
 
-        dp_in = out_5
+        dp_in = out_5[:,-1:,:,:]
             
         dp_in,out_h1,out_c1 = DprnnBlock(numUnits = self.numUnits, batch_size =1, L = -1,width = 50,channel = 128, causal=True)(dp_in,in_h1,in_c1)
         out_h1=tf.expand_dims(out_h1,axis=0)
@@ -81,7 +84,8 @@ class DPCRN_model():
         out_h2=tf.expand_dims(out_h2,axis=0)
         out_c2=tf.expand_dims(out_c2,axis=0)
         
-        dp_out = dp_in
+        dp_out = Concatenate(axis =1)([rnn_cache,dp_in])
+        new_cache=dp_out[:,1:,:,:]
 
         skipcon_1 = Concatenate(axis = -1)([out_5,dp_out])
        
@@ -122,18 +126,18 @@ class DPCRN_model():
 
         enh_real, enh_imag = enh_spec[0],enh_spec[1]
 
-        self.model = Model(inputs=[real_dat,img_dat,in_h1,in_c1,in_h2,in_c2],outputs=[enh_real,enh_imag,out_h1,out_c1,out_h2,out_c2,out_5])
+        self.model = Model(inputs=[real_dat,img_dat,rnn_cache,in_h1,in_c1,in_h2,in_c2],outputs=[enh_real,enh_imag,new_cache,out_h1,out_c1,out_h2,out_c2])
         self.model.summary()
         self.model.load_weights('./pretrained.h5')
-        converter = tf.lite.TFLiteConverter.from_keras_model(self.model)
-        if quant:
-            converter.optimizations = [tf.lite.Optimize.DEFAULT]
-        tflite_model = converter.convert()
-        with tf.io.gfile.GFile(save_name, 'wb') as f:
-              f.write(tflite_model)
+        if(is_tflite):
+            converter = tf.lite.TFLiteConverter.from_keras_model(self.model)
+            if quant:
+                converter.optimizations = [tf.lite.Optimize.DEFAULT]
+            tflite_model = converter.convert()
+            with tf.io.gfile.GFile(save_name+'.tflite', 'wb') as f:
+                f.write(tflite_model)
+        else:
+            tf2onnx.convert.from_keras(self.model,output_path=save_name+'.onnx',opset=12)
        
-
-
-
 dpcrn=DPCRN_model()
-dpcrn.export_real_time_model('dpcrn_rt.tflite')
+dpcrn.export_real_time_model('dpcrn_rt',is_tflite=False)
