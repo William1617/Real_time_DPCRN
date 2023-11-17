@@ -77,10 +77,10 @@ class DPCRN_model():
 
         dp_in = out_5[:,-1:,:,:]
             
-        dp_in,out_h1,out_c1 = DprnnBlock(numUnits = self.numUnits, batch_size =1, L = -1,width = 50,channel = 128, causal=True)(dp_in,in_h1,in_c1)
+        dp_in,out_h1,out_c1 = DprnnBlock(numUnits = self.numUnits, batch_size =1, L = 1,width = 50,channel = 128, causal=True)(dp_in,in_h1,in_c1)
         out_h1=tf.expand_dims(out_h1,axis=0)
         out_c1=tf.expand_dims(out_c1,axis=0)
-        dp_in,out_h2,out_c2 = DprnnBlock(numUnits = self.numUnits, batch_size =1, L = -1,width = 50,channel = 128, causal=True)(dp_in,in_h2,in_c2)
+        dp_in,out_h2,out_c2 = DprnnBlock(numUnits = self.numUnits, batch_size =1, L = 1,width = 50,channel = 128, causal=True)(dp_in,in_h2,in_c2)
         out_h2=tf.expand_dims(out_h2,axis=0)
         out_c2=tf.expand_dims(out_c2,axis=0)
         
