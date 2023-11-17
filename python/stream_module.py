@@ -70,9 +70,7 @@ class DprnnBlock(keras.layers.Layer):
         inter_LSTM_input = tf.reshape(inter_LSTM_input,[batch_size*width,L,channel])
         
 
-        x,out_stateh,out_statec=inter_rnn(inter_LSTM_input[:,:1,:],initial_state = [in_h1[0],in_c1[0]])
-
-        inter_LSTM_out, inter_LSTM_h, inter_LSTM_c = inter_rnn(inter_LSTM_input,initial_state = [in_h1[0],in_c1[0]])
+        inter_LSTM_out,out_stateh,out_statec=inter_rnn(inter_LSTM_input[:,:1,:],initial_state = [in_h1[0],in_c1[0]])
 
         inter_dense_out = inter_fc(inter_LSTM_out)
         
