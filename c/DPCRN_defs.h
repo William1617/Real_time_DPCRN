@@ -43,7 +43,7 @@ struct trg_engine {
     float states_h2[STATE_SIZE] = { 0 };
     float states_c2[STATE_SIZE] = { 0 };
 
-    TfLiteTensor* input_details[7];
+    TfLiteTensor* input_details_a[7];
     const TfLiteTensor* output_details_a[7]
     TfLiteInterpreter* interpreter;
     TfLiteModel* model;
