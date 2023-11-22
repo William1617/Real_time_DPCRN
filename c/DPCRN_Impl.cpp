@@ -114,7 +114,7 @@ void DPCRNInfer(trg_engine* m_pEngine, float* cos_f, float* sin_f) {
     
     TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[0], m_pEngine->real_buffer, 11*FFT_OUT_SIZE * sizeof(float));
     TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[1], m_pEngine->imag_buffer, 11*FFT_OUT_SIZE * sizeof(float));
-    fLiteTensorCopyFromBuffer(m_pEngine->input_details_a[2], m_pEngine->rnn_cache, RNN_CACHE_SIZE * sizeof(float));
+    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[2], m_pEngine->rnn_cache, RNN_CACHE_SIZE * sizeof(float));
     TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[3], m_pEngine->states_h1, STATE_SIZE * sizeof(float));
     TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[4], m_pEngine->states_c1, STATE_SIZE * sizeof(float));
     TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[5], m_pEngine->states_h2, STATE_SIZE * sizeof(float));
