@@ -1,6 +1,6 @@
 
  
-#include "DPCRN_defs.h"
+#include "DTLN_defs.h"
 #include "AudioFile.h"
 
 
@@ -30,6 +30,11 @@ void DPRCN() {
     trg_engine* m_pEngine;
 
     m_pEngine = new trg_engine;
+    m_pEngine->cache_buffer.resize(CACHE_NUM);
+    int cacache_size[CACHE_NUM]={203*2,101*32,52*32,52*32,52*64,50*256,50*128,50*64,50*64,100*64,50*128,50*128,50*128,50*128};
+    for (int i=0;i<CACHE_NUM;i++){
+        m_pEngine->cache_buffer[i].resize(cacache_size[i],0.0);
+    }
 
 	// load model
 	m_pEngine->model = TfLiteModelCreateFromFile(MODEL_NAME);
@@ -52,7 +57,7 @@ void DPRCN() {
         return;
     }
     //Set input and output
-    for(int =0;i<7;i++){
+    for(int =0;i<CACHE_NUM+2;i++){
         m_pEngine->input_details[i] = TfLiteInterpreterGetInputTensor(m_pEngine->interpreter, i);
         m_pEngine->output_details[i] = TfLiteInterpreterGetOutputTensor(m_pEngine->interpreter, i);
 
@@ -76,9 +81,8 @@ void DPRCN() {
     for(int i=0;i<process_num;i++)
     {
         memmove(m_pEngine->mic_buffer, m_pEngine->mic_buffer + BLOCK_SHIFT, (BLOCK_LEN - BLOCK_SHIFT) * sizeof(float));
-       
         for(int n=0;n<BLOCK_SHIFT;n++){
-                m_pEngine->mic_buffer[n+BLOCK_LEN-BLOCK_SHIFT]=inputmicfile.samples[0][n+i*BLOCK_SHIFT];} 
+                m_pEngine->mic_buffer[n+BLOCK_LEN-BLOCK_SHIFT]=inputmicfile.samples[0][n+i*BLOCK_SHIFT];}
         DTLNAECInfer(m_pEngine,cos_f,sin_f);
         for(int j=0;j<BLOCK_SHIFT;j++){
             testdata.push_back(m_pEngine->out_buffer[j]);    //for one forward process save first BLOCK_SHIFT model output samples
@@ -106,34 +110,32 @@ void DPCRNInfer(trg_engine* m_pEngine, float* cos_f, float* sin_f) {
         in_real[k] =sum_real;
         in_imag[k] =sum_img;
 	}
-    memmove(m_pEngine->real_buffer, m_pEngine->real_buffer + FFT_OUT_SIZE, 10*FFT_OUT_SIZE * sizeof(float));
-    memcpy(m_pEngine->real_buffer+10*FFT_OUT_SIZE,in_real,FFT_OUT_SIZE*sizeof(float));
 
-    memmove(m_pEngine->imag_buffer, m_pEngine->imag_buffer + FFT_OUT_SIZE, 10*FFT_OUT_SIZE * sizeof(float));
-    memcpy(m_pEngine->imag_buffer+10*FFT_OUT_SIZE,in_imag,FFT_OUT_SIZE*sizeof(float));
+    int cache_size;
+    //the data input of first model is the magnitude of input wav data
+    TfLiteTensorCopyFromBuffer(m_pEngine->input_details[0], in_real, FFT_OUT_SIZE * sizeof(float));
+    TfLiteTensorCopyFromBuffer(m_pEngine->input_details[1], in_imag, FFT_OUT_SIZE * sizeof(float));
+    for(int i=0;i<CACHE_NUM;i++){
+        cache_size= m_pEngine->cache_buffer[i].size();
+        TfLiteTensorCopyFromBuffer(m_pEngine->input_details[i+2], m_pEngine->cache_buffer[i].data(), cacache_size * sizeof(float));
+
+    }
     
-    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[0], m_pEngine->real_buffer, 11*FFT_OUT_SIZE * sizeof(float));
-    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[1], m_pEngine->imag_buffer, 11*FFT_OUT_SIZE * sizeof(float));
-    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[2], m_pEngine->rnn_cache, RNN_CACHE_SIZE * sizeof(float));
-    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[3], m_pEngine->states_h1, STATE_SIZE * sizeof(float));
-    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[4], m_pEngine->states_c1, STATE_SIZE * sizeof(float));
-    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[5], m_pEngine->states_h2, STATE_SIZE * sizeof(float));
-    TfLiteTensorCopyFromBuffer(m_pEngine->input_details_a[6], m_pEngine->states_c2, STATE_SIZE * sizeof(float));
-
     if (TfLiteInterpreterInvoke(m_pEngine->interpreter_a) != kTfLiteOk) {
         printf("Error invoking detection model\n");
     }
 
     float out_real[FFT_OUT_SIZE];
     float out_img[FFT_OUT_SIZE];
-    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[0], out_real, FFT_OUT_SIZE * sizeof(float));
-    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[1], out_img, FFT_OUT_SIZE * sizeof(float));
+    TfLiteTensorCopyToBuffer(m_pEngine->output_details[0], out_real, FFT_OUT_SIZE * sizeof(float));
+    TfLiteTensorCopyToBuffer(m_pEngine->output_details[1], out_img, FFT_OUT_SIZE * sizeof(float));
     //the putput state of current block will become the input state of next block
-    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[2], m_pEngine->rnn_cache, RNN_CACHE_SIZE * sizeof(float));
-    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[3], m_pEngine->states_h1, STATE_SIZE * sizeof(float));
-    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[4], m_pEngine->states_c1, STATE_SIZE * sizeof(float));
-    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[5], m_pEngine->states_h2, STATE_SIZE * sizeof(float));
-    TfLiteTensorCopyToBuffer(m_pEngine->output_details_a[6], m_pEngine->states_c2, STATE_SIZE * sizeof(float));
+    for (int i=0;i<CACHE_NUM;i++){
+        cache_size= m_pEngine->cache_buffer[i].size();
+        TfLiteTensorCopyToBuffer(m_pEngine->output_details[i+2], m_pEngine->cache_buffer[i].data(), cache_size * sizeof(float));
+
+    }
+   
 
     //ifft
     float out_block[BLOCK_LEN];

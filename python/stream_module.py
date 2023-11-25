@@ -8,7 +8,7 @@ class DprnnBlock(keras.layers.Layer):
         self.numUnits = numUnits
         self.batch_size = batch_size
         self.causal = causal
-        self.intra_rnn = keras.layers.Bidirectional(keras.layers.LSTM(units=self.numUnits//2, return_sequences=True,implementation = 2,recurrent_activation = 'hard_sigmoid',unroll = True))
+        self.intra_rnn = keras.layers.Bidirectional(keras.layers.LSTM(units=self.numUnits//2, return_sequences=True,implementation = 2,recurrent_activation = 'sigmoid',unroll = True))
         self.intra_fc = keras.layers.Dense(units = self.numUnits,)
 
         if self.causal:
@@ -16,7 +16,7 @@ class DprnnBlock(keras.layers.Layer):
         else:
             self.intra_ln = keras.layers.LayerNormalization(center=False, scale=False)
 
-        self.inter_rnn = keras.layers.LSTM(units=self.numUnits, return_sequences=True,implementation = 2,recurrent_activation = 'hard_sigmoid',unroll = True, return_state=True)
+        self.inter_rnn = keras.layers.LSTM(units=self.numUnits, return_sequences=True,implementation = 2,recurrent_activation = 'sigmoid',unroll = True, return_state=True)
         
         self.inter_fc = keras.layers.Dense(units = self.numUnits,) 
 
@@ -70,7 +70,9 @@ class DprnnBlock(keras.layers.Layer):
         inter_LSTM_input = tf.reshape(inter_LSTM_input,[batch_size*width,L,channel])
         
 
-        inter_LSTM_out,out_stateh,out_statec=inter_rnn(inter_LSTM_input[:,:1,:],initial_state = [in_h1[0],in_c1[0]])
+        x,out_stateh,out_statec=inter_rnn(inter_LSTM_input[:,:1,:],initial_state = [in_h1[0],in_c1[0]])
+
+        inter_LSTM_out, inter_LSTM_h, inter_LSTM_c = inter_rnn(inter_LSTM_input,initial_state = [in_h1[0],in_c1[0]])
 
         inter_dense_out = inter_fc(inter_LSTM_out)
         
