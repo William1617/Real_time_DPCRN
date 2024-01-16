@@ -112,7 +112,7 @@ void DPCRNInfer(trg_engine* m_pEngine, float* cos_f, float* sin_f) {
 	}
 
     int cache_size;
-    //the data input of first model is the magnitude of input wav data
+   
     TfLiteTensorCopyFromBuffer(m_pEngine->input_details[0], in_real, FFT_OUT_SIZE * sizeof(float));
     TfLiteTensorCopyFromBuffer(m_pEngine->input_details[1], in_imag, FFT_OUT_SIZE * sizeof(float));
     for(int i=0;i<CACHE_NUM;i++){
@@ -129,7 +129,7 @@ void DPCRNInfer(trg_engine* m_pEngine, float* cos_f, float* sin_f) {
     float out_img[FFT_OUT_SIZE];
     TfLiteTensorCopyToBuffer(m_pEngine->output_details[0], out_real, FFT_OUT_SIZE * sizeof(float));
     TfLiteTensorCopyToBuffer(m_pEngine->output_details[1], out_img, FFT_OUT_SIZE * sizeof(float));
-    //the putput state of current block will become the input state of next block
+    
     for (int i=0;i<CACHE_NUM;i++){
         cache_size= m_pEngine->cache_buffer[i].size();
         TfLiteTensorCopyToBuffer(m_pEngine->output_details[i+2], m_pEngine->cache_buffer[i].data(), cache_size * sizeof(float));
