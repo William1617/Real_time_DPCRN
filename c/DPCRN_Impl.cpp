@@ -89,6 +89,9 @@ void DPRCN() {
         }
     }
     ExportWAV("aectest.wav",testaecdata,SAMEPLERATE);
+    TfLiteInterpreterDelete(m_pEngine->interpreter);
+    TfLiteInterpreterOptionsDelete(options);
+    TfLiteModelDelete(m_pEngine->model);
 
 
  }
