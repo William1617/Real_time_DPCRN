@@ -83,7 +83,7 @@ void DPRCN() {
         memmove(m_pEngine->mic_buffer, m_pEngine->mic_buffer + BLOCK_SHIFT, (BLOCK_LEN - BLOCK_SHIFT) * sizeof(float));
         for(int n=0;n<BLOCK_SHIFT;n++){
                 m_pEngine->mic_buffer[n+BLOCK_LEN-BLOCK_SHIFT]=inputmicfile.samples[0][n+i*BLOCK_SHIFT];}
-        DTLNAECInfer(m_pEngine,cos_f,sin_f);
+        DPCRNInfer(m_pEngine,cos_f,sin_f);
         for(int j=0;j<BLOCK_SHIFT;j++){
             testdata.push_back(m_pEngine->out_buffer[j]);    //for one forward process save first BLOCK_SHIFT model output samples
         }
