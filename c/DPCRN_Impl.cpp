@@ -88,7 +88,7 @@ void DPRCN() {
             testdata.push_back(m_pEngine->out_buffer[j]);    //for one forward process save first BLOCK_SHIFT model output samples
         }
     }
-    ExportWAV("aectest.wav",testaecdata,SAMEPLERATE);
+    ExportWAV("aectest.wav",testdata,SAMEPLERATE);
     TfLiteInterpreterDelete(m_pEngine->interpreter);
     TfLiteInterpreterOptionsDelete(options);
     TfLiteModelDelete(m_pEngine->model);
