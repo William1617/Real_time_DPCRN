@@ -65,9 +65,11 @@ void DPRCN() {
     //Cal dft directly as Block_len is not the power of 2
     float cos_f[BLOCK_LEN] ={0};
     float sin_f[BLOCK_LEN] ={0};
+    float windows[BLOCK_LEN]={0};
     for (int i=0;i<BLOCK_LEN;i++){
         cos_f[i]=cosf(2*PI*i/BLOCK_LEN);
         sin_f[i]=-sinf(2*PI*i/BLOCK_LEN);
+        windows[i]=sinf((0.5+i)/BLOCK_LEN*PI);
 
     }
 
@@ -82,8 +84,8 @@ void DPRCN() {
     {
         memmove(m_pEngine->mic_buffer, m_pEngine->mic_buffer + BLOCK_SHIFT, (BLOCK_LEN - BLOCK_SHIFT) * sizeof(float));
         for(int n=0;n<BLOCK_SHIFT;n++){
-                m_pEngine->mic_buffer[n+BLOCK_LEN-BLOCK_SHIFT]=inputmicfile.samples[0][n+i*BLOCK_SHIFT];}
-        DPCRNInfer(m_pEngine,cos_f,sin_f);
+                m_pEngine->mic_buffer[n+BLOCK_LEN-BLOCK_SHIFT]=inputmicfile.samples[0][n+i*BLOCK_SHIFT]*windows[n];}
+        DPCRNInfer(m_pEngine,cos_f,sin_f,windows);
         for(int j=0;j<BLOCK_SHIFT;j++){
             testdata.push_back(m_pEngine->out_buffer[j]);    //for one forward process save first BLOCK_SHIFT model output samples
         }
@@ -96,7 +98,7 @@ void DPRCN() {
 
  }
  
-void DPCRNInfer(trg_engine* m_pEngine, float* cos_f, float* sin_f) {
+void DPCRNInfer(trg_engine* m_pEngine, float* cos_f, float* sin_f,float* windows) {
 
 	float in_real[FFT_OUT_SIZE] = { 0 };
     float in_imag[FFT_OUT_SIZE] = { 0 };
@@ -161,7 +163,7 @@ void DPCRNInfer(trg_engine* m_pEngine, float* cos_f, float* sin_f) {
     memmove(m_pEngine->out_buffer, m_pEngine->out_buffer + BLOCK_SHIFT, (BLOCK_LEN - BLOCK_SHIFT) * sizeof(float));
     memset(m_pEngine->out_buffer + (BLOCK_LEN - BLOCK_SHIFT), 0, BLOCK_SHIFT * sizeof(float));
     for (int i = 0; i < BLOCK_LEN; i++)
-        m_pEngine->out_buffer[i] += out_block[i];
+        m_pEngine->out_buffer[i] += out_block[i]*windows[i];
 
 }
  
