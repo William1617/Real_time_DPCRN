@@ -124,7 +124,7 @@ void DPCRNInfer(trg_engine* m_pEngine, float* cos_f, float* sin_f) {
 
     }
     
-    if (TfLiteInterpreterInvoke(m_pEngine->interpreter_a) != kTfLiteOk) {
+    if (TfLiteInterpreterInvoke(m_pEngine->interpreter) != kTfLiteOk) {
         printf("Error invoking detection model\n");
     }
 
