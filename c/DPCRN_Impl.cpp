@@ -84,7 +84,7 @@ void DPRCN() {
     {
         memmove(m_pEngine->mic_buffer, m_pEngine->mic_buffer + BLOCK_SHIFT, (BLOCK_LEN - BLOCK_SHIFT) * sizeof(float));
         for(int n=0;n<BLOCK_SHIFT;n++){
-                m_pEngine->mic_buffer[n+BLOCK_LEN-BLOCK_SHIFT]=inputmicfile.samples[0][n+i*BLOCK_SHIFT]*windows[n];}
+                m_pEngine->mic_buffer[n+BLOCK_LEN-BLOCK_SHIFT]=inputmicfile.samples[0][n+i*BLOCK_SHIFT];}
         DPCRNInfer(m_pEngine,cos_f,sin_f,windows);
         for(int j=0;j<BLOCK_SHIFT;j++){
             testdata.push_back(m_pEngine->out_buffer[j]);    //for one forward process save first BLOCK_SHIFT model output samples
@@ -109,8 +109,8 @@ void DPCRNInfer(trg_engine* m_pEngine, float* cos_f, float* sin_f,float* windows
         float sum_img=0;
         for (int i=0;i<Block_len;i++){
             int coef_id=(k*i)%Block_len;
-            sum_real +=m_pEngine->mic_buffer[i]*cos_f[coef_id];
-            sum_img +=_pEngine->mic_buffer[i]*sin_f[coef_id];
+            sum_real +=m_pEngine->mic_buffer[i]*cos_f[coef_id]*windows[i];
+            sum_img +=_pEngine->mic_buffer[i]*sin_f[coef_id]*windows[i];
         }
         in_real[k] =sum_real;
         in_imag[k] =sum_img;
