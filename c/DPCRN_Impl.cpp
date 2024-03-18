@@ -94,6 +94,7 @@ void DPRCN() {
     TfLiteInterpreterDelete(m_pEngine->interpreter);
     TfLiteInterpreterOptionsDelete(options);
     TfLiteModelDelete(m_pEngine->model);
+    delete m_pEngine;
 
 
  }
